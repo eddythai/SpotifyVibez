@@ -37,42 +37,6 @@
           LOGIN
       </button>
   </a>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script>
-      window.onSpotifyWebPlaybackSDKReady = () => {
-        const token = 'BQDMzfqLbNnpbtqDRNiJiYlN4WDsNbfrDl3871-HbUaN6WknZXe1F844-BRRxqA30Cv3RF5cbdM9TrpNGgl6zgVOO2rUBP6QrTSkwVaurlLhyE4gBZpVJNbuEls_Hn3NoiCIrFOYJpBojVzSNz7nlTNl7K7BMYu9qSgvtX30e5dAJWgF2nHoMBc';
-        const player = new Spotify.Player({
-          name: 'VIBEZ Online Player',
-          getOAuthToken: cb => { cb(token); }
-        });
-  
-        // Error handling
-        player.addListener('initialization_error', ({ message }) => { console.error(message); });
-        player.addListener('authentication_error', ({ message }) => { console.error(message); });
-        player.addListener('account_error', ({ message }) => { console.error(message); });
-        player.addListener('playback_error', ({ message }) => { console.error(message); });
-  
-        // Playback status updates
-        player.addListener('player_state_changed', state => { console.log(state); });
-  
-        // Ready
-        player.addListener('ready', ({ device_id }) => {
-          console.log('Ready with Device ID', device_id);
-        });
-  
-        // Not Ready
-        player.addListener('not_ready', ({ device_id }) => {
-          console.log('Device ID has gone offline', device_id);
-        });
-  
-        // Connect to the player!
-        player.connect();
-        
-  
-  
-        
-      };
-    </script>
     <input type="file" id="thefile" accept="audio/*" />
 </header>
 
@@ -107,7 +71,10 @@
         var totalplaylists;
         var userID;
         var arrTracksUri = [];
+        var arrTracksID = [];
         var arrTempo = [];
+        var arrHappy = [];
+        var arrSad = [];
 
         if (error) {
           alert('There was an error during the authentication');
@@ -154,10 +121,12 @@
                                       if(response.items[j].track){
                                       if(arrTracksUri.includes(response.items[j].track.uri)!=true){
                                         arrTracksUri.push(response.items[j].track.uri);
+                                        arrTracksID.push(response.items[j].track.id);
                                     }
                                   }
                                 } else {
                                       arrTracksUri.push(response.items[j].track.uri);
+                                      arrTracksID.push(response.items[j].track.id);
                                 }
                               }
                             }
@@ -166,7 +135,7 @@
                                 url: 'https://api.spotify.com/v1/playlists/' + items[i].id + '/tracks',
                                 method: "POST",
                                 data: JSON.stringify({
-                                  uris: [arrTracksUri[0],arrTracksUri[1],arrTracksUri[2],arrTracksUri[3],arrTracksUri[4],arrTracksUri[5],arrTracksUri[6],arrTracksUri[7],arrTracksUri[8]],
+                                  uris: [arrTracksUri[0],arrTracksUri[1],arrTracksUri[2],arrTracksUri[3],arrTracksUri[4],arrTracksUri[5],arrTracksUri[6],arrTracksUri[7],arrTracksUri[8],arrTracksUri[9],arrTracksUri[10],arrTracksUri[11]],
                                 }),
                                 headers: {
                                   'Authorization': 'Bearer ' + access_token,
@@ -174,6 +143,24 @@
                                 },
                                 success: function(response) {
                                     console.log("Works!");
+                                    for(var x = 0; x < 12; x++){
+                                      (function (x) {
+                                        $.ajax({
+                                            url: 'https://api.spotify.com/v1/audio-features/' + arrTracksID[x],
+                                            headers: {
+                                              'Authorization': 'Bearer ' + access_token
+                                            },
+                                            success: function(response) {
+                                              if(response.energy < 0.6){
+                                                arrSad.push(arrTracksUri[x]);
+                                              } else {
+                                                arrHappy.push(arrTracksUri[x]);
+                                              }
+                                            }
+                                          })
+                                        }
+                                      )(x)};
+                                    
                                 }
                               });
                           }
@@ -185,6 +172,7 @@
                     });
                   }
                               });
+                  
                   $('#login').hide();
                   $('#loggedin').show();
                 }
